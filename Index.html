@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Baby Jar" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>Baby Jar 🍼</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --border: #2a2a2a;
+      --accent: #ff3d3d;
+      --accent2: #ff8c00;
+      --text: #f0f0f0;
+      --muted: #666;
+      --coin: #ffd700;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      width: 60vw;
+      height: 60vw;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,61,61,0.15) 0%, transparent 70%);
+      top: -10vw;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+    }
+
+    .header {
+      padding: 52px 28px 20px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+
+    .header-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .sync-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background 0.4s;
+    }
+    .sync-dot.live { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+    .sync-dot.syncing { background: var(--accent2); animation: pulse-dot 0.6s infinite; }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .total-section {
+      flex: 0 0 auto;
+      padding: 10px 28px 0;
+      text-align: center;
+    }
+
+    .total-label {
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .total-amount {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(72px, 22vw, 120px);
+      line-height: 1;
+      background: linear-gradient(135deg, var(--coin) 0%, #ff8c00 50%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: inline-block;
+    }
+
+    .total-amount.pop {
+      animation: pop 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
+
+    @keyframes pop {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    .breakdown {
+      display: flex;
+      gap: 12px;
+      padding: 16px 28px;
+      flex: 0 0 auto;
+    }
+
+    .person-card {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+
+    .person-card.active-adder { border-color: var(--accent); }
+
+    .person-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,61,61,0.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .person-name {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .person-amount {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      color: var(--text);
+    }
+
+    .person-count {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .button-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 28px 20px;
+      gap: 16px;
+    }
+
+    .big-btn {
+      width: 100%;
+      max-width: 340px;
+      aspect-ratio: 1;
+      max-height: 240px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ff6b6b, #cc0000 50%, #7a0000);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow:
+        0 0 0 1px rgba(255,61,61,0.3),
+        0 0 40px rgba(255,61,61,0.2),
+        0 20px 60px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.15);
+      transition: transform 0.1s, box-shadow 0.1s;
+      touch-action: manipulation;
+      overflow: hidden;
+    }
+
+    .big-btn:active {
+      transform: scale(0.95);
+      box-shadow:
+        0 0 0 1px rgba(255,61,61,0.3),
+        0 0 20px rgba(255,61,61,0.15),
+        0 8px 30px rgba(0,0,0,0.6),
+        inset 0 -1px 0 rgba(255,255,255,0.05);
+    }
+
+    .big-btn-emoji { font-size: 52px; margin-bottom: 4px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+    .big-btn-label { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: rgba(255,255,255,0.9); text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+    .big-btn-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      animation: ripple-anim 0.6s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes ripple-anim {
+      from { transform: scale(0); opacity: 1; }
+      to { transform: scale(2.5); opacity: 0; }
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      max-width: 340px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .action-btn:active { border-color: var(--accent); color: var(--text); }
+
+    /* SETUP */
+    .setup-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 28px;
+      gap: 24px;
+    }
+
+    .setup-overlay.hidden { display: none; }
+
+    .setup-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 48px;
+      text-align: center;
+      background: linear-gradient(135deg, var(--coin), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .setup-subtitle { font-size: 14px; color: var(--muted); text-align: center; line-height: 1.6; }
+
+    .setup-input {
+      width: 100%;
+      max-width: 300px;
+      padding: 16px 20px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 18px;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .setup-input:focus { border-color: var(--accent); }
+
+    .setup-btn {
+      width: 100%;
+      max-width: 300px;
+      padding: 18px;
+      border-radius: 14px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 2px;
+      cursor: pointer;
+    }
+
+    .setup-btn:active { opacity: 0.8; }
+
+    /* FLOAT BADGE */
+    .float-badge {
+      position: fixed;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
+      color: var(--coin);
+      text-shadow: 0 0 20px rgba(255,215,0,0.8);
+      pointer-events: none;
+      z-index: 200;
+      animation: float-up 0.9s ease-out forwards;
+    }
+
+    @keyframes float-up {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-120px) scale(1.4); }
+    }
+
+    /* HISTORY */
+    .history-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .history-panel {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #111;
+      border-top: 1px solid var(--border);
+      border-radius: 20px 20px 0 0;
+      padding: 20px 24px 40px;
+      max-height: 60dvh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+      z-index: 50;
+    }
+
+    .history-panel.open { transform: translateY(0); }
+    .history-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+    .history-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: var(--muted); margin-bottom: 12px; }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .history-item:last-child { border-bottom: none; }
+    .history-who { color: var(--text); font-weight: 500; }
+    .history-time { color: var(--muted); font-size: 11px; }
+    .history-amount { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--coin); }
+    .history-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 20px 0; }
+
+    .overlay-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; }
+    .overlay-bg.show { display: block; }
+
+    /* CONFIRM */
+    .confirm-modal {
+      position: fixed; inset: 0; z-index: 200;
+      display: none; align-items: center; justify-content: center;
+      padding: 28px; background: rgba(0,0,0,0.7);
+    }
+    .confirm-modal.show { display: flex; }
+    .confirm-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 300px; text-align: center; }
+    .confirm-box h3 { font-family: 'Bebas Neue', sans-serif; font-size: 28px; margin-bottom: 8px; }
+    .confirm-box p { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .confirm-btns { display: flex; gap: 10px; }
+    .confirm-yes { flex: 1; padding: 14px; border-radius: 12px; border: none; background: var(--accent); color: white; font-family: 'Bebas Neue', sans-serif; font-size: 18px; cursor: pointer; }
+    .confirm-no { flex: 1; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--text); font-family: 'Bebas Neue', sans-serif; font-size: 18px; cursor: pointer; }
+
+    /* LOADING */
+    .loading-overlay {
+      position: fixed; inset: 0; background: var(--bg); z-index: 90;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px;
+    }
+    .loading-overlay.hidden { display: none; }
+    .loading-spinner {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 12px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  </style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Connecting...</div>
+</div>
+
+<!-- SETUP -->
+<div class="setup-overlay hidden" id="setupOverlay">
+  <div style="font-size:56px">🍼</div>
+  <div class="setup-title">BABY JAR</div>
+  <div class="setup-subtitle">Enter your name so your partner<br>knows who said a baby word.</div>
+  <input class="setup-input" id="nameInput" type="text" placeholder="Your name..." maxlength="16" autocomplete="off" />
+  <button class="setup-btn" id="setupBtn">LET'S GO</button>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="mainApp" style="display:none">
+  <div class="header">
+    <span class="header-title">🍼 Baby Jar</span>
+    <div class="sync-dot live" id="syncDot"></div>
+  </div>
+
+  <div class="total-section">
+    <div class="total-label">Total Owed</div>
+    <div class="total-amount" id="totalAmount">£0</div>
+  </div>
+
+  <div class="breakdown" id="breakdown"></div>
+
+  <div class="button-section">
+    <button class="big-btn" id="bigBtn" onclick="addEntry(event)">
+      <div class="big-btn-emoji">🍼</div>
+      <div class="big-btn-label">SAID A BABY WORD</div>
+      <div class="big-btn-sub">+£1</div>
+    </button>
+    <div class="actions">
+      <button class="action-btn" onclick="undoLast()">↩ Undo</button>
+      <button class="action-btn" onclick="showReset()">🗑 Reset All</button>
+    </div>
+  </div>
+</div>
+
+<button class="history-btn" id="historyBtn" onclick="toggleHistory()" style="display:none">📋</button>
+
+<div class="overlay-bg" id="overlayBg" onclick="toggleHistory()"></div>
+<div class="history-panel" id="historyPanel">
+  <div class="history-handle"></div>
+  <div class="history-title">HISTORY</div>
+  <div id="historyList"></div>
+</div>
+
+<div class="confirm-modal" id="confirmModal">
+  <div class="confirm-box">
+    <h3>RESET JAR?</h3>
+    <p>Clears everything for both of you.</p>
+    <div class="confirm-btns">
+      <button class="confirm-yes" onclick="confirmReset()">YES, RESET</button>
+      <button class="confirm-no" onclick="hideReset()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ─── FIREBASE CONFIG ────────────────────────────────────────────────────
+  const firebaseConfig = {
+    apiKey: "AIzaSyBdjm9Br__Byl0McLlwhz4NWEXNUSZ28lI",
+    authDomain: "baby-voice-2d31d.firebaseapp.com",
+    projectId: "baby-voice-2d31d",
+    storageBucket: "baby-voice-2d31d.firebasestorage.app",
+    messagingSenderId: "573014227484",
+    appId: "1:573014227484:web:a07dd1d0ac31381ff6bdd9",
+    measurementId: "G-6GQXYR5G70"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const entriesRef = collection(db, "entries");
+
+  // ─── STATE ────────────────────────────────────────────────────────────
+  let myName = '';
+  let entries = []; // live from Firestore
+
+  // ─── INIT ─────────────────────────────────────────────────────────────
+  myName = localStorage.getItem('babyjar_name') || '';
+
+  if (!myName) {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    document.getElementById('setupOverlay').classList.remove('hidden');
+  } else {
+    startApp();
+  }
+
+  document.getElementById('setupBtn').addEventListener('click', () => {
+    const val = document.getElementById('nameInput').value.trim();
+    if (!val) return;
+    myName = val;
+    localStorage.setItem('babyjar_name', myName);
+    document.getElementById('setupOverlay').classList.add('hidden');
+    document.getElementById('loadingOverlay').classList.remove('hidden');
+    startApp();
+  });
+
+  document.getElementById('nameInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('setupBtn').click();
+  });
+
+  function startApp() {
+    // Real-time listener
+    const q = query(entriesRef, orderBy('ts', 'desc'));
+    onSnapshot(q, (snapshot) => {
+      entries = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      document.getElementById('mainApp').style.display = 'flex';
+      document.getElementById('historyBtn').style.display = 'flex';
+      render();
+    }, (err) => {
+      console.error(err);
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      document.getElementById('mainApp').style.display = 'flex';
+    });
+  }
+
+  // ─── ACTIONS ──────────────────────────────────────────────────────────
+  window.addEntry = async function(event) {
+    const btn = document.getElementById('bigBtn');
+    const rect = btn.getBoundingClientRect();
+
+    // ripple
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.cssText = `width:${size}px;height:${size}px;left:${(rect.width-size)/2}px;top:${(rect.height-size)/2}px`;
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 700);
+
+    // float badge
+    const badge = document.createElement('div');
+    badge.className = 'float-badge';
+    badge.textContent = '+£1';
+    badge.style.cssText = `left:${rect.left + rect.width/2 - 30}px;top:${rect.top + rect.height/2 - 20}px`;
+    document.body.appendChild(badge);
+    setTimeout(() => badge.remove(), 900);
+
+    // pop
+    const totalEl = document.getElementById('totalAmount');
+    totalEl.classList.remove('pop');
+    void totalEl.offsetWidth;
+    totalEl.classList.add('pop');
+
+    // write to Firestore
+    try {
+      await addDoc(entriesRef, { name: myName, amount: 1, ts: Date.now() });
+    } catch(e) { console.error(e); }
+  };
+
+  window.undoLast = async function() {
+    const last = entries.find(e => e.name === myName);
+    if (!last) return;
+    try {
+      await deleteDoc(doc(db, 'entries', last.id));
+    } catch(e) { console.error(e); }
+  };
+
+  window.showReset = function() {
+    document.getElementById('confirmModal').classList.add('show');
+  };
+
+  window.hideReset = function() {
+    document.getElementById('confirmModal').classList.remove('show');
+  };
+
+  window.confirmReset = async function() {
+    try {
+      const snapshot = await getDocs(entriesRef);
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    } catch(e) { console.error(e); }
+    hideReset();
+  };
+
+  // ─── RENDER ───────────────────────────────────────────────────────────
+  function render() {
+    const total = entries.reduce((s, e) => s + e.amount, 0);
+    document.getElementById('totalAmount').textContent = `£${total}`;
+
+    const people = {};
+    for (const e of entries) {
+      if (!people[e.name]) people[e.name] = { amount: 0, count: 0 };
+      people[e.name].amount += e.amount;
+      people[e.name].count++;
+    }
+    if (!people[myName]) people[myName] = { amount: 0, count: 0 };
+
+    const breakdown = document.getElementById('breakdown');
+    breakdown.innerHTML = '';
+
+    Object.entries(people)
+      .sort(([a], [b]) => a === myName ? -1 : b === myName ? 1 : 0)
+      .forEach(([name, data]) => {
+        const card = document.createElement('div');
+        card.className = 'person-card' + (name === myName ? ' active-adder' : '');
+        card.innerHTML = `
+          <div class="person-name">${esc(name)}${name === myName ? ' (you)' : ''}</div>
+          <div class="person-amount">£${data.amount}</div>
+          <div class="person-count">${data.count} baby word${data.count !== 1 ? 's' : ''}</div>
+        `;
+        breakdown.appendChild(card);
+      });
+
+    const historyList = document.getElementById('historyList');
+    if (entries.length === 0) {
+      historyList.innerHTML = '<div class="history-empty">No baby words yet 😇</div>';
+    } else {
+      historyList.innerHTML = entries.slice(0, 50).map(e => `
+        <div class="history-item">
+          <div>
+            <div class="history-who">${esc(e.name)}</div>
+            <div class="history-time">${timeAgo(e.ts)}</div>
+          </div>
+          <div class="history-amount">+£${e.amount}</div>
+        </div>
+      `).join('');
+    }
+  }
+
+  // ─── HELPERS ──────────────────────────────────────────────────────────
+  window.toggleHistory = function() {
+    document.getElementById('historyPanel').classList.toggle('open');
+    document.getElementById('overlayBg').classList.toggle('show');
+  };
+
+  function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function timeAgo(ts) {
+    const diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+    return new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+</script>
+
+</body>
+</html>
